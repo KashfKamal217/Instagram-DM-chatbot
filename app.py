@@ -1,76 +1,82 @@
 import os
+import requests
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
+from response import get_response_groq
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
-# Environment variables (secure handling)
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 ACCESS_TOKEN = os.getenv("PAGE_ACCESS_TOKEN")
-INSTAGRAM_ACCOUNT_ID = os.getenv("INSTAGRAM_ACCOUNT_ID")
 
 
-# -----------------------------------------
-# Webhook Route
-# -----------------------------------------
+# -------------------------
+# SEND MESSAGE FUNCTION
+# -------------------------
+def send_message(recipient_id, message_text):
+    url = f"https://graph.facebook.com/v18.0/me/messages?access_token={ACCESS_TOKEN}"
+
+    payload = {
+        "recipient": {"id": recipient_id},
+        "message": {"text": message_text}
+    }
+
+    res = requests.post(url, json=payload)
+    print("Message Sent:", res.status_code, res.text)
+
+
+# -------------------------
+# WEBHOOK
+# -------------------------
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
 
-    # ---------------------------
-    # 1. VERIFY WEBHOOK (GET)
-    # ---------------------------
+    # VERIFY
     if request.method == "GET":
         mode = request.args.get("hub.mode")
         token = request.args.get("hub.verify_token")
         challenge = request.args.get("hub.challenge")
 
         if mode == "subscribe" and token == VERIFY_TOKEN:
-            print(" Webhook Verified")
-            print("Token matched successfully")
+            print("Webhook Verified ✅")
             return challenge, 200
-        else:
-            print(" Verification failed")
-            return "Verification failed", 403
 
-    # ---------------------------
-    # 2. RECEIVE MESSAGES (POST)
-    # ---------------------------
-    elif request.method == "POST":
+        return "Verification failed", 403
+
+    # RECEIVE MESSAGE
+    if request.method == "POST":
         data = request.get_json()
 
-        print(" Incoming Data:", data)
-
         if data.get("object") == "instagram":
+
             for entry in data.get("entry", []):
                 for messaging in entry.get("messaging", []):
 
                     sender_id = messaging["sender"]["id"]
 
-                    # Ignore bot echo messages
                     if messaging.get("message") and not messaging["message"].get("is_echo"):
 
                         user_message = messaging["message"].get("text")
 
                         if user_message:
-                            print("👤 User ID:", sender_id)
-                            print("💬 Message:", user_message)
+                            print("User:", user_message)
 
-        return jsonify({"status": "received"}), 200
+                            reply = get_response_groq(user_message)
+
+                            send_message(sender_id, reply)
+
+        return jsonify({"status": "ok"}), 200
 
 
-# -----------------------------------------
-# Home Route
-# -----------------------------------------
+# -------------------------
+# HOME
+# -------------------------
 @app.route("/")
 def home():
-    return "ZAIQA Bot Running ", 200
+    return "ZAIQA Bot Running 🚀", 200
 
 
-# -----------------------------------------
-# Run Server
-# -----------------------------------------
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
