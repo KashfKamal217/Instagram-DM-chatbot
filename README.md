@@ -13,7 +13,7 @@ It receives customer messages through **Instagram Webhooks**, processes them usi
 ## 🎥 Demo Video
 
 Watch the full project demo here:  
-👉 [Google Drive Video Link]([https://drive.google.com/file/d/FILE_ID/view?usp=sharing](https://drive.google.com/file/d/13QLGsFAA6sAsgLwIVdKtHBoW79_V5-2B/view?usp=sharing))
+👉 [Google Drive Video Link](https://drive.google.com/file/d/13QLGsFAA6sAsgLwIVdKtHBoW79_V5-2B/view?usp=sharing)
 
 ## ⚙️ Tech Stack
 
