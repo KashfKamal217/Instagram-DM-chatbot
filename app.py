@@ -2,7 +2,7 @@ import os
 import requests
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
-from response import get_response_groq
+from responses import get_response
 
 load_dotenv()
 
@@ -48,6 +48,7 @@ def webhook():
     # RECEIVE MESSAGE
     if request.method == "POST":
         data = request.get_json()
+        print("Incoming Webhook Data:", data)
 
         if data.get("object") == "instagram":
 
@@ -63,7 +64,7 @@ def webhook():
                         if user_message:
                             print("User:", user_message)
 
-                            reply = get_response_groq(user_message)
+                            reply = get_response(user_message)
 
                             send_message(sender_id, reply)
 
